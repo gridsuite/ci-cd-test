@@ -1,0 +1,45 @@
+databaseChangeLog:
+
+  - include:
+      file: changesets/changelog_20211019T140751Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20211028T094008Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20211123T105713Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20220706T093841Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20221013T153228Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20221123T132520Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20230313T145947Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20230706T144551Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20240529T143611Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20250704T094426Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20250827T091725Z.xml
+      relativeToChangelogFile: true

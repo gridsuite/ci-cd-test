@@ -1,0 +1,54 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2023-03-13T14:59:47Z.xml">
+    <changeSet author="homereti (generated)" id="1678719598169-1">
+        <createTable tableName="id_based_contingency_list">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="id_based_contingency_listPK"/>
+            </column>
+            <column name="modification_date" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-2">
+        <createTable tableName="id_based_contingency_list_identifiers_list_entities">
+            <column name="id_based_contingency_list_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="identifiers_list_entities_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-3">
+        <createTable tableName="identifier_list">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="identifier_listPK"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-4">
+        <createTable tableName="identifier_list_entity_equipment_ids">
+            <column name="identifier_list_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="equipment_ids" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-5">
+        <addUniqueConstraint columnNames="identifiers_list_entities_id" constraintName="UK_iwwj9nmjg198y2mrsc4g401f3" tableName="id_based_contingency_list_identifiers_list_entities"/>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-6">
+        <createIndex indexName="identifierListEntity_equipmentIds_idx1" tableName="identifier_list_entity_equipment_ids">
+            <column name="identifier_list_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-7">
+        <addForeignKeyConstraint baseColumnNames="id_based_contingency_list_entity_id" baseTableName="id_based_contingency_list_identifiers_list_entities" constraintName="FKb324ae0bet6xcl04c870an408" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="id_based_contingency_list" validate="true"/>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-8">
+        <addForeignKeyConstraint baseColumnNames="identifiers_list_entities_id" baseTableName="id_based_contingency_list_identifiers_list_entities" constraintName="FKmpeg9psgq5861nc28ywxegpex" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="identifier_list" validate="true"/>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1678719598169-9">
+        <addForeignKeyConstraint baseColumnNames="identifier_list_entity_id" baseTableName="identifier_list_entity_equipment_ids" constraintName="identifierListEntity_equipmentIds_fk1" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="identifier_list" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

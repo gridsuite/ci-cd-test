@@ -1,0 +1,15 @@
+server:
+  port: 5022
+
+powsybl:
+  services:
+    network-store-server:
+      base-uri: http://localhost:8080/
+
+spring:
+  rabbitmq:
+    addresses: localhost
+
+powsybl-ws:
+  database:
+    host: localhost

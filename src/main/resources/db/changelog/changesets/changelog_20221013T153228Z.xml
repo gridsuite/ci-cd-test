@@ -1,0 +1,70 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2022-10-13T15:32:28Z.xml">
+    <changeSet author="braquartdav (generated)" id="1665675161275-1">
+        <createTable tableName="form_contingency_list_entity_countries2">
+            <column name="form_contingency_list_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="country2" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-2">
+        <createIndex indexName="formContingencyListEntity_countries2_idx" tableName="form_contingency_list_entity_countries2">
+            <column name="form_contingency_list_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-3">
+        <addForeignKeyConstraint baseColumnNames="form_contingency_list_entity_id" baseTableName="form_contingency_list_entity_countries2" constraintName="formContingencyListEntity_countries2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="form_contingency_list" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-4">
+        <createTable tableName="numeric_filter">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="numeric_filterPK"/>
+            </column>
+            <column name="operator" type="VARCHAR(255)"/>
+            <column name="value1" type="FLOAT8"/>
+            <column name="value2" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-5">
+        <addColumn tableName="form_contingency_list">
+            <column name="numeric_filter_id1_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-6">
+        <addForeignKeyConstraint baseColumnNames="numeric_filter_id1_id" baseTableName="form_contingency_list" constraintName="numericFilterId_id_fk1" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="numeric_filter" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-7">
+        <dropColumn columnName="NOMINAL_VOLTAGE" tableName="FORM_CONTINGENCY_LIST"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-8">
+        <dropColumn columnName="NOMINAL_VOLTAGE_OPERATOR" tableName="FORM_CONTINGENCY_LIST"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-9">
+        <addColumn tableName="form_contingency_list">
+            <column name="numeric_filter_id2_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-10">
+        <addForeignKeyConstraint baseColumnNames="numeric_filter_id2_id" baseTableName="form_contingency_list" constraintName="numericFilterId_id_fk2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="numeric_filter" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-11">
+        <createTable tableName="form_contingency_list_entity_countries1">
+            <column name="form_contingency_list_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="country1" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-12">
+        <createIndex indexName="formContingencyListEntity_countries1_idx" tableName="form_contingency_list_entity_countries1">
+            <column name="form_contingency_list_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-13">
+        <addForeignKeyConstraint baseColumnNames="form_contingency_list_entity_id" baseTableName="form_contingency_list_entity_countries1" constraintName="formContingencyListEntity_countries1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="form_contingency_list" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1665675161275-14">
+        <dropTable tableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES"/>
+    </changeSet>
+</databaseChangeLog>

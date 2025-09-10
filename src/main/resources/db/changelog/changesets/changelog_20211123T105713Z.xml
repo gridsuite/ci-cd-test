@@ -1,0 +1,68 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.10.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd" logicalFilePath="db/changelog/changesets/changelog_2021-11-23T10:57:13Z.xml">
+    <changeSet author="homereti" id="1637665038908-1">
+        <dropForeignKeyConstraint
+            baseTableName="filters_contingency_list_entity_countries"
+            constraintName="filtersContingencyListEntity_countries_fk"
+        />
+    </changeSet>
+    <changeSet author="homereti" id="1637665038908-2">
+        <dropPrimaryKey
+            constraintName="filters_contingency_listPK"
+            dropIndex="true"
+            tableName="filters_contingency_list"
+        />
+    </changeSet>
+    <changeSet author="homereti" id="1637665038908-3">
+        <dropIndex indexName="filtersContingencyListEntity_countries_idx"
+            tableName="filters_contingency_list_entity_countries"
+        />
+    </changeSet>
+
+    <changeSet author="homereti" id="1637665038908-4">
+        <renameTable
+            newTableName="form_contingency_list"
+            oldTableName="filters_contingency_list"
+        />
+    </changeSet>
+
+    <changeSet author="homereti" id="1637665038908-5">
+        <renameTable
+            newTableName="form_contingency_list_entity_countries"
+            oldTableName="filters_contingency_list_entity_countries"
+        />
+    </changeSet>
+
+    <changeSet author="homereti" id="1637665038908-6">
+        <renameColumn
+            columnDataType="uuid"
+            newColumnName="form_contingency_list_entity_id"
+            oldColumnName="filters_contingency_list_entity_id"
+            tableName="form_contingency_list_entity_countries"
+        />
+    </changeSet>
+    <changeSet author="homereti" id="1637665038908-7">
+        <addPrimaryKey
+            columnNames="id"
+            constraintName="form_contingency_listPK"
+            tableName="form_contingency_list"/>
+    </changeSet>
+    <changeSet author="homereti" id="1637665038908-8">
+        <addForeignKeyConstraint
+            constraintName="formContingencyListEntity_countries_fk"
+            baseColumnNames="form_contingency_list_entity_id"
+            baseTableName="form_contingency_list_entity_countries"
+            referencedTableName="form_contingency_list"
+            referencedColumnNames="id"
+            deferrable="false"
+            initiallyDeferred="false"
+            validate="true"
+        />
+    </changeSet>
+    <changeSet author="homereti" id="1637665038908-9">
+        <createIndex
+            indexName="form_contingency_list_entity_countries_idx"
+            tableName="form_contingency_list_entity_countries">
+            <column name="form_contingency_list_entity_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
