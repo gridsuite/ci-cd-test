@@ -1,0 +1,9 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2022-07-06T09:38:41Z.xml">
+    <changeSet author="lecuyerfra (generated)" id="1657100335225-1">
+        <dropColumn columnName="EQUIPMENT_ID" tableName="FORM_CONTINGENCY_LIST"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1657100335225-2">
+        <dropColumn columnName="EQUIPMENT_NAME" tableName="FORM_CONTINGENCY_LIST"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,20 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="braquartdav (generated)" id="1756286263175-7">
+        <addColumn tableName="id_based_contingency_list_identifiers_list_entities">
+            <column name="identifier_order" type="integer"/>
+        </addColumn>
+        <!-- mandatory: init this new column with a default order -->
+        <sql dbms="postgresql">
+            WITH ordered_aleas AS (
+                SELECT identifiers_list_entities_id, ROW_NUMBER() OVER (PARTITION BY id_based_contingency_list_entity_id
+                ORDER BY identifiers_list_entities_id) - 1 as id_order
+                FROM id_based_contingency_list_identifiers_list_entities
+            )
+            UPDATE id_based_contingency_list_identifiers_list_entities a
+            SET identifier_order = oa.id_order
+            FROM ordered_aleas oa
+            WHERE a.identifiers_list_entities_id = oa.identifiers_list_entities_id;
+        </sql>
+    </changeSet>
+</databaseChangeLog>
