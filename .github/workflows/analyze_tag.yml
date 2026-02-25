@@ -19,20 +19,11 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v1
 
-      - name: Extract tag
-        id: extract_tag
-        run: |
-          TAG_NAME=${GITHUB_REF##*/}
-
-          TAG=${TAG_NAME#v}
-
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-
       - name: Build with Maven
         run: >
           mvn --batch-mode -Pjacoco verify
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.branch.name=${{ env.TAG }}
+          -Dsonar.branch.name=${GITHUB_REF#refs/tags/v}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
