@@ -1,0 +1,38 @@
+name: SonarCloud Analysis on Tag Push
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  sonar-tag:
+    runs-on: ubuntu-latest
+    environment: 'release'
+    
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v2
+        with:
+          java-version: '21'
+
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Extract tag
+        id: extract_tag
+        run: |
+          TAG_NAME=${GITHUB_REF##*/}
+
+          TAG=${TAG_NAME#v}
+
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      - name: Build with Maven and SonarCloud
+        run: |
+          mvn --batch-mode -Pjacoco verify
+          org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.branch.name=${{ env.TAG }} 
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
