@@ -10,7 +10,7 @@ jobs:
   build:
     uses: powsybl/github-ci/.github/workflows/build-frontend-app-generic.yml@dbfa51306075001d4f2191ab0a83bc5d959a93ea
     with:
-      dockerImage: gridsuite/ci-cd-test-app
+      dockerImage: gridsuite/ci-cd-test
       dockerUsername: gridsuiteci
       eventType: ci-cd-test_updated
       licensercPath: .github/config/.licenserc.yaml
