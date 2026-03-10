@@ -8,9 +8,9 @@ on:
 
 jobs:
   build:
-    uses: powsybl/github-ci/.github/workflows/build-frontend-app-generic.yml@dbfa51306075001d4f2191ab0a83bc5d959a93ea
+    uses: powsybl/github-ci/.github/workflows/build-frontend-app-generic.yml@54e99821dd0746fdb51d4e39a5ca2f029fe7fe33
     with:
-      dockerImage: gridsuite/ci-cd-test
+      dockerImage: gridsuite/ci-cd-test:latest-front
       dockerUsername: gridsuiteci
       eventType: ci-cd-test_updated
       licensercPath: .github/config/.licenserc.yaml
