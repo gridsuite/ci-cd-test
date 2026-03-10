@@ -20,5 +20,5 @@ jobs:
       releaseVersion: ${{ github.event.inputs.releaseVersion }}
       gitReference: ${{ github.event.inputs.gitReference }}
     secrets:
-      githubappPrivateKey: ${{ secrets.POWSYBL_ACTIONS_SECRET }}
-      docker-token: ${{ secrets.DOCKERHUB_TOKEN }}
+      VERSIONBUMP_GHAPP_PRIVATE_KEY: ${{ secrets.VERSIONBUMP_GHAPP_PRIVATE_KEY }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
