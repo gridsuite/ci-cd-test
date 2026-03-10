@@ -16,5 +16,5 @@ jobs:
       dockerUsername: gridsuiteci
       releaseVersion: ${{ github.event.inputs.releaseVersion }}
     secrets:
-      githubappPrivateKey: ${{ secrets.POWSYBL_ACTIONS_SECRET }}
-      docker-token: ${{ secrets.DOCKERHUB_TOKEN }}
+      VERSIONBUMP_GHAPP_PRIVATE_KEY: ${{ secrets.VERSIONBUMP_GHAPP_PRIVATE_KEY }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
