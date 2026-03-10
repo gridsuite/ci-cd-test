@@ -12,7 +12,7 @@ jobs:
     uses: powsybl/github-ci/.github/workflows/build-base-docker-image-generic.yml@54e99821dd0746fdb51d4e39a5ca2f029fe7fe33
     with:
       dockerImage: gridsuite/ci-cd-test:latest-docker
-      dockerUsername: powsyblci
+      dockerUsername: gridsuiteci
       eventOrganizations: gridsuite
       eventType: java_updated
     secrets:
