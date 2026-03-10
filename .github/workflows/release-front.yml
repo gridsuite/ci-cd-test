@@ -18,7 +18,7 @@ jobs:
     with:
       releaseVersion: ${{ github.event.inputs.releaseVersion }}
       commitSha: ${{ github.event.inputs.gitReference }}
-      dockerImage: docker.io/gridsuite/ci-cd-test-app
+      dockerImage: docker.io/gridsuite/ci-cd-test
       dockerUsername: gridsuiteci
       githubappId: ${{ vars.GRIDSUITE_ACTIONS_APPID }}
     secrets:
