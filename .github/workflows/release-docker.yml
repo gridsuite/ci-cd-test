@@ -16,7 +16,7 @@ jobs:
     with:
       githubappId: ${{ vars.POWSYBL_ACTIONS_APPID }}
       dockerImage: docker.io/gridsuite/ci-cd-test
-      dockerUsername: powsyblci
+      dockerUsername: gridsuiteci
       releaseVersion: ${{ github.event.inputs.releaseVersion }}
       gitReference: ${{ github.event.inputs.gitReference }}
     secrets:
