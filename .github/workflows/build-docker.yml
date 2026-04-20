@@ -1,10 +1,6 @@
 name: CI-Docker
 
 on:
-  push:
-    branches:
-      - 'main'
-      - 'use-docker-build-push-action'
   pull_request:
 
 jobs:

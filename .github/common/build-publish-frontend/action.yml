@@ -1,0 +1,81 @@
+name: 'Build and Publish Backend'
+description: 'Common build and publish steps for backend app and lib workflows'
+inputs:
+  app-token:
+    required: true
+  shortVersion:
+    required: true
+  sonarToken:
+    required: true
+  dockerImage:
+    required: false
+  dockerUsername:
+    required: true
+  dockerToken:
+    required: true
+  tmpBranch:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4 v4.3.0
+      with:
+        node-version: 24
+        registry-url: https://registry.npmjs.org
+
+    - name: Change Npm version to release version 
+      shell: bash
+      run: |
+        npm version --no-git-tag-version "${{ inputs.shortVersion }}"
+
+    - name: verified-bot-commit
+      uses: IAreKyleW00t/verified-bot-commit@27699d08b34a5440e6b4385c6ea3651602d26bcc # v1.3.3
+      with:
+        token: ${{ inputs.app-token }}
+        files: "**"
+        message: ${{ format('Release v{0}', inputs.shortVersion) }}
+        ref: ${{ inputs.tmpBranch }}
+
+    - name: Create local tag and cleanup remote tmp branch
+      shell: bash
+      run: |
+        git push origin ":${{ inputs.tmpBranch }}"
+        git tag "v${{ inputs.shortVersion }}"
+
+    - name: Install Dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Quality Checks
+      shell: bash
+      run: |
+        npm run test:coverage
+        npm run licenses-check
+
+    - name: Build Application
+      shell: bash
+      run: npm run build
+
+    - name: SonarCloud Analysis
+      uses: SonarSource/sonarqube-scan-action@aa494459d7c39c106cc77b166de8b4250a32bb97 # v5.1.0
+      env:
+        GITHUB_TOKEN: ${{ inputs.app-token }}
+        SONAR_TOKEN: ${{ inputs.sonarToken }}
+      with:
+        args: >
+          -Dsonar.branch.name="${{ inputs.shortVersion }}"
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+      with:
+        username: ${{ inputs.dockerUsername }}
+        password: ${{ inputs.dockerToken }}
+
+    - name: Build and publish Docker image
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      with:
+        context: .
+        push: true
+        tags: ${{ inputs.dockerImage }}:${{ inputs.shortVersion }}
