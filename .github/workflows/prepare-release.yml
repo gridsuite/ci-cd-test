@@ -1,0 +1,123 @@
+on:
+  workflow_call:
+    inputs:
+      githubappId:
+        required: true
+        type: string
+      releaseVersion:
+        required: true
+        type: string
+      gitReference:
+        required: true
+        type: string
+      environment:
+        required: false
+        default: 'release'
+        type: string
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - name: Setup Environment
+        id: setup
+        uses: gridsuite/ci-cd-test/.github/common/setup-git.yml@refactor-workflows
+        with:
+          githubappId: ${{ inputs.githubappId }}
+
+      - name: Parse release version
+        run: |
+          regex="^v([0-9]+)\.([0-9]+)$"
+          if [[ $RUNGHA_RELEASE_VERSION =~ $regex ]]
+          then
+            echo "GITHUB_MAJOR_VERSION=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+            echo "GITHUB_MINOR_VERSION=${BASH_REMATCH[2]}" >> $GITHUB_ENV
+            echo "GITHUB_SHORT_VERSION=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.0" >> $GITHUB_ENV
+          else 
+            echo ERROR: release version should match the format vX.X
+            exit 1
+          fi
+        env:
+          RUNGHA_RELEASE_VERSION: ${{ inputs.releaseVersion }} # just for defense against script injection
+
+      - name: Check if release already exists
+        run: |
+          if git ls-remote --quiet --exit-code origin "refs/heads/release-$RUNGHA_RELEASE_VERSION" >/dev/null 2>&1
+          then
+            echo "ERROR: Release $RUNGHA_RELEASE_VERSION already exists"
+            exit 1
+          else
+            echo "Release $RUNGHA_RELEASE_VERSION doesn't exist, it will be performed"
+          fi
+        env:
+          RUNGHA_RELEASE_VERSION: ${{ inputs.releaseVersion }} # just for defense against script injection
+
+      - name: Check if gitReference is merged in main
+        run: |
+          # needs fetch-depth: 0
+          # This ensures that only reviewed commits can be released because
+          # we require reviews and pull requests to allow to merge in main.
+          if ! main_contains=$(git branch -r --format='%(refname:short)' --contains "$RUNGHA_GIT_REFERENCE" origin/main); then
+            echo "ERROR checking whether gitRef $RUNGHA_GIT_REFERENCE is merged in main or not"
+            exit 1
+          elif [ -z "$main_contains" ]; then
+            echo "ERROR: gitRef $RUNGHA_GIT_REFERENCE not merged in main"
+            exit 1
+          else
+            echo "gitRef $RUNGHA_GIT_REFERENCE merged in main, release will be performed"
+          fi
+        env:
+          RUNGHA_GIT_REFERENCE: ${{ inputs.gitReference }} # just for defense against script injection
+
+      - name: Check if gitReference is missing already released commits
+        run: |
+          # The following block ensures that the new release will not omit
+          # commits that were already released. If this case was allowed, then
+          # it would for instance be possible to release a new version without
+          # some security fixes. For linear histories, this would happen when
+          # rereleasing an old commit as a new version. For non linear histories,
+          # this could additionally happen when releasing a new commit (subsequently
+          # merged in main) but that branches off of old commits (or even unrelated histories).
+          # If the code that finds existing releases fails and doesn't find anything, it
+          # could be the first release, or it could be that there is a bug or exploit. In
+          # this case, instead of allowing to release anything, we just allow to release the
+          # tip of main (allowing to release anything else would also allow to omit commits).
+          # NOTE: needs fetch-depth: 0
+          all_release_tags=$(git tag --list 'v[0-9]*')
+          if [[ -z "$all_release_tags" ]]; then
+            echo "WARN no existing release tags found, is this the first release?"
+            if ! git_reference_parsed=$(git rev-parse "$RUNGHA_GIT_REFERENCE"); then
+              echo "ERROR rev-parsing gitRef $RUNGHA_GIT_REFERENCE"
+              exit 1
+            fi
+            if ! main_parsed=$(git rev-parse origin/main); then
+              echo "ERROR rev-parsing origin/main"
+              exit 1
+            fi
+            if [[ -n "$git_reference_parsed" && "$git_reference_parsed" != "$main_parsed" ]]; then
+              echo "ERROR: No existing release found, must release the tip of main $main_parsed but got $git_reference_parsed"
+              exit 1
+            else
+              echo "gitRef $RUNGHA_GIT_REFERENCE is tip of main, release will be performed"
+            fi
+          else
+            latest_main_release=$(git merge-base main $all_release_tags)
+            if ! git merge-base --is-ancestor "$latest_main_release" "$RUNGHA_GIT_REFERENCE"; then
+              echo "ERROR gitRef $RUNGHA_GIT_REFERENCE is not a descendant of the latest released commit $latest_main_release"
+              exit 1
+            else
+              echo "gitRef $RUNGHA_GIT_REFERENCE descends from previous releases, release will be performed"
+            fi
+          fi
+        env:
+          RUNGHA_GIT_REFERENCE: ${{ inputs.gitReference }} # just for defense against script injection
+
+      - name: Create release branch
+        shell: bash
+        run: |
+          git checkout -b "release-v${GITHUB_MAJOR_VERSION}.${GITHUB_MINOR_VERSION}" "$RUNGHA_GIT_REFERENCE"
+          git push origin "release-v${GITHUB_MAJOR_VERSION}.${GITHUB_MINOR_VERSION}"
+        env:
+          RUNGHA_GIT_REFERENCE: ${{ inputs.gitReference }}
