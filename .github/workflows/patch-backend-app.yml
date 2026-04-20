@@ -1,0 +1,63 @@
+on:
+  workflow_call:
+    inputs:
+      githubappId:
+        required: true
+        type: string
+      releaseVersion:
+        required: true
+        type: string
+      dockerImage:
+        required: false
+        type: string
+      dockerUsername:
+        required: true
+        type: string
+      environment:
+        required: false
+        default: 'release'
+        type: string
+    secrets:
+      VERSIONBUMP_GHAPP_PRIVATE_KEY:
+        required: true
+      sonar-token:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - name: Setup Git
+        id: setup-git
+        uses: gridsuite/ci-cd-test/.github/common/setup-git@main
+        with:
+          githubappId: ${{ inputs.githubappId }}
+          githubappPrivateKey: ${{ secrets.VERSIONBUMP_GHAPP_PRIVATE_KEY }}
+
+      - name: Pre Patch
+        uses: gridsuite/ci-cd-test/.github/common/pre-release-patch@main
+        with:
+          releaseVersion: ${{ inputs.releaseVersion }}
+          type: patch
+
+      - name: Build and Publish
+        uses: gridsuite/ci-cd-test/.github/common/build-publish-backend@main
+        with:
+          app-token: ${{ steps.setup-git.outputs.token }}
+          shortVersion: ${{ env.GITHUB_SHORT_VERSION }}
+          sonarToken: ${{ secrets.sonar-token }}
+          sonarOrganization: ${{ inputs.sonarOrganization }}
+          sonarProjectKey: ${{ inputs.sonarProjectKey }}
+          dockerImage: ${{ inputs.dockerImage }}
+          dockerUsername: ${{ inputs.dockerUsername }}
+          dockerToken: ${{ secrets.DOCKERHUB_TOKEN }}
+          tmpBranch: ${{ env.TMPRELEASEBRANCH }}
+
+      - name: Push release branch and tag
+        run: |
+          git push origin "release-v${GITHUB_MAJOR_VERSION}.${GITHUB_MINOR_VERSION}"
+          git push origin "v$GITHUB_SHORT_VERSION"
