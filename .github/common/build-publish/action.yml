@@ -1,0 +1,70 @@
+name: 'Build and Publish Backend'
+description: 'Common build and publish steps for backend app and lib workflows'
+inputs:
+  app-token:
+    required: true
+  shortVersion:
+    required: true
+  sonarToken:
+    required: true
+  sonarOrganization:
+    required: true
+  sonarProjectKey:
+    required: true
+  dockerImage:
+    required: false
+  dockerUsername:
+    required: true
+  dockerToken:
+    required: true
+  tmpBranch:
+    required: true
+secrets:
+  sonar-token:
+    required: true
+  DOCKERHUB_TOKEN:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Change Maven version to release version
+      run: mvn --batch-mode versions:set -DgenerateBackupPoms=false -DnewVersion="${{ inputs.shortVersion }}"
+
+    - name: verified-bot-commit
+      uses: IAreKyleW00t/verified-bot-commit@27699d08b34a5440e6b4385c6ea3651602d26bcc # v1.3.3
+      with:
+        token: ${{ inputs.app-token }}
+        files: "**"
+        message: ${{ format('Release v{0}', inputs.shortVersion) }}
+        ref: ${{ inputs.tmpBranch }}
+
+    - name: Create local tag and cleanup remote tmp branch
+      run: |
+        git push origin ":${{ inputs.tmpBranch }}"
+        git tag "v${{ inputs.shortVersion }}"
+
+    - name: Build with Maven
+      shell: bash
+      run: >
+        mvn --batch-mode -Pjacoco verify
+        org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        -Dsonar.host.url=https://sonarcloud.io
+        -Dsonar.branch.name="${{ inputs.shortVersion }}"
+      env:
+        SONAR_TOKEN: ${{ secrets.sonarToken }}
+        RUNGHA_SONAR_ORGANIZATION: ${{ inputs.sonarOrganization }} # just for defense against script injection
+        RUNGHA_SONAR_PROJECT_KEY: ${{ inputs.sonarProjectKey }} # just for defense against script injection
+
+    - name: Build Docker image
+      shell: bash
+      run: >
+        mvn --batch-mode deploy -DskipTests -Dmaven.install.skip -Dmaven.deploy.skip -Dpowsybl.docker.deploy
+        -Djib.httpTimeout=60000
+        ${RUNGHA_DOCKER_IMAGE:+-Djib.to.image="$RUNGHA_DOCKER_IMAGE:${{ inputs.shortVersion }}"}
+        -Djib.to.auth.username="$RUNGHA_DOCKER_USERNAME"
+        -Djib.to.auth.password="$RUNGHA_DOCKERHUB_TOKEN"
+      env:
+        RUNGHA_DOCKER_IMAGE: ${{ inputs.dockerImage }} # just for defense against script injection
+        RUNGHA_DOCKER_USERNAME: ${{ inputs.dockerUsername }} # just for defense against script injection
+        RUNGHA_DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }} # just for defense against script injection

@@ -1,0 +1,69 @@
+name: 'Check Permission and Setup Git'
+description: 'Common setup step'
+inputs:
+  githubappId:
+    required: true
+  githubappPrivateKey:
+    required: true
+outputs:
+  token:
+    value: ${{ steps.app-token.outputs.token }}
+runs:
+  using: "composite"
+  steps:
+    # don't allow to disable this check, and for security only succeed if everything goes perfectly and outputs "true"
+    # by reusable workflows. Currently only the workflow file is checked out at the caller
+    # There are no good workarounds to checkout as companion file (script or composite action)
+#    - name: Check Actor Permission
+#      shell: bash
+#      env:
+#        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      run: |
+#        echo "checking permission=maintain on repo=$GITHUB_REPOSITORY for user=$GITHUB_ACTOR"
+#        # no need to escape GITHUB_REPOSITORY and GITHUB_ACTOR because github
+#        # names can only contain ASCII letters, digits, and the characters ., # -, and _.
+#        # permission: legacy, is actually a role (one per user) and doesn't
+#        #   have "maintain" role, only ["none", "read", "write", "admin"]
+#        # role_name: one per user, new standard roles, custom roles, "" and
+#        #   "push" and "pull" instead of "none" and "read" and "write": "",
+#        #   "read", "triage", "write", "maintain", "admin" and also non
+#        #   standard custom roles
+#        # user.permissions: boolean status only for each standard permissions "pull", "triage", "push", "maintain", "admin"
+#        # So the best for now is to use user.permissions I think.
+#        # NOTE: the gh api returns a JSON boolean so jq can only output true or false without quotes
+#        # (actually even for JSON strings gh's gojq implementation strips the quotes by default unlike jq)
+#        allowed=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$GITHUB_ACTOR/permission" --jq '.user.permissions["maintain"]')
+#        [[ "$allowed" == "true" ]] || exit 1
+
+    # Copied from create-github-app-token README "Configure git CLI for an app's bot user"
+    - uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1 v1.11.6
+      id: app-token
+      name: Generate app token
+      with:
+        app-id: ${{ inputs.githubappId }}
+        private-key: ${{ inputs.githubappPrivateKey }}
+
+    - name: Get GitHub App User ID
+      id: get-user-id
+      shell: bash
+      run: echo "user-id=$(gh api "/users/${RUNGHA_APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        RUNGHA_APP_SLUG: ${{ steps.app-token.outputs.app-slug }} # just for defense against script injection
+    # git user not used normally anymore because we use the github commit API
+    # to create the commits, but keep this anyway just in case. We do get the
+    # exact same value as the one github uses for creating the signed commits.
+    - name: Setup git user
+      shell: bash
+      run: |
+        git config --global user.name "${RUNGHA_APP_SLUG}[bot]"
+        git config --global user.email "${RUNGHA_USER_ID}+${RUNGHA_APP_SLUG}[bot]@users.noreply.github.com"
+      env:
+        RUNGHA_APP_SLUG: ${{ steps.app-token.outputs.app-slug }} # just for defense against script injection
+        RUNGHA_USER_ID: ${{ steps.get-user-id.outputs.user-id }} # just for defense against script injection
+
+    - name: Checkout sources
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4 v4.2.2
+      with:
+        fetch-depth: 0
+        token: ${{ steps.app-token.outputs.token }}
