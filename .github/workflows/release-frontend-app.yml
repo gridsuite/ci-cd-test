@@ -1,0 +1,107 @@
+on:
+  workflow_call:
+    inputs:
+      githubappId:
+        required: true
+        type: string
+      releaseVersion:
+        required: true
+        type: string
+      dockerImage:
+        required: false
+        type: string
+      dockerUsername:
+        required: true
+        type: string
+      environment:
+        required: false
+        default: 'release'
+        type: string
+    secrets:
+      VERSIONBUMP_GHAPP_PRIVATE_KEY:
+        required: true
+      sonar-token:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - name: Setup Git
+        id: setup-git
+        uses: gridsuite/ci-cd-test/.github/common/setup-git@main
+        with:
+          githubappId: ${{ inputs.githubappId }}
+          githubappPrivateKey: ${{ secrets.VERSIONBUMP_GHAPP_PRIVATE_KEY }}
+
+      - name: Pre Release
+        uses: gridsuite/ci-cd-test/.github/common/pre-release-patch@main
+        with:
+          releaseVersion: ${{ inputs.releaseVersion }}
+
+      - name: Build and Publish
+        uses: gridsuite/ci-cd-test/.github/common/build-publish-frontend@main
+        with:
+          app-token: ${{ steps.setup-git.outputs.token }}
+          shortVersion: ${{ env.GITHUB_SHORT_VERSION }}
+          sonarToken: ${{ secrets.sonar-token }}
+          dockerImage: ${{ inputs.dockerImage }}
+          dockerUsername: ${{ inputs.dockerUsername }}
+          dockerToken: ${{ secrets.DOCKERHUB_TOKEN }}
+          tmpBranch: ${{ env.TMPRELEASEBRANCH }}
+
+      - name: Push release branch and tag
+        run: |
+          git push origin "release-v${GITHUB_MAJOR_VERSION}.${GITHUB_MINOR_VERSION}"
+          git push origin "v${GITHUB_SHORT_VERSION}"
+
+      - name: Checkout main and Update SNAPSHOT
+        run: |
+          git clean -f -d
+          git checkout main
+          git pull
+          
+          CURRENT_MAVEN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          regex="(.*)-SNAPSHOT"
+          if [[ $CURRENT_MAVEN_VERSION =~ $regex ]]; then
+            CURRENT_RELEASE_VERSION=${BASH_REMATCH[1]}
+          fi
+          
+          if [[ "$CURRENT_RELEASE_VERSION" == "$GITHUB_SHORT_VERSION" ]]; then
+            minor=${GITHUB_MINOR_VERSION}
+            ((++minor))
+            mvn --batch-mode versions:set -DgenerateBackupPoms=false -DnewVersion="$GITHUB_MAJOR_VERSION.$minor.0-SNAPSHOT"
+            
+            TMPRANDOM="$(printf "%04x" $RANDOM)$(printf "%04x" $RANDOM)$(printf "%04x" $RANDOM)"
+            TMPMAINBRANCH="copy-${TMPRANDOM}-main-v${GITHUB_MAJOR_VERSION}.$minor"
+            git push origin "main:$TMPMAINBRANCH"
+            
+            # Use verified-bot-commit for main
+            echo "TMPMAINBRANCH=$TMPMAINBRANCH" >> $GITHUB_ENV
+            echo "MAIN_MINOR=$minor" >> $GITHUB_ENV
+          fi
+
+      # creates a signed commit on the tmp remote branch with our diff, and
+      # then updates (fast-forward) our local branch to this new commit. It
+      # works because the tmp remote branch was a copy of the local branch
+      # before committing.
+      - name: verified-bot-commit for main branch
+        if: env.TMPMAINBRANCH != ''
+        uses: IAreKyleW00t/verified-bot-commit@27699d08b34a5440e6b4385c6ea3651602d26bcc # v1.3.3
+        with:
+          token: ${{ steps.setup-git.outputs.token }}
+          files: "**"
+          message: ${{ format('Update SNAPSHOT version to v{0}.{1}.0', env.GITHUB_MAJOR_VERSION, env.MAIN_MINOR) }}
+          ref: ${{ env.TMPMAINBRANCH }}
+
+      - name: push to main and cleanup remote tmp branch
+        if: env.TMPMAINBRANCH != ''
+        run: |
+          next_tag="next-v${GITHUB_MAJOR_VERSION}.$MAIN_MINOR"
+          git tag "$next_tag"
+          git push origin ":${TMPMAINBRANCH}"
+          git push origin main "$next_tag"

@@ -1,0 +1,111 @@
+on:
+  workflow_call:
+    inputs:
+      githubappId:
+        required: true
+        type: string
+      releaseVersion:
+        required: true
+        type: string
+      dockerImage:
+        required: false
+        type: string
+      dockerUsername:
+        required: true
+        type: string
+      environment:
+        required: false
+        default: 'release'
+        type: string
+    secrets:
+      VERSIONBUMP_GHAPP_PRIVATE_KEY:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - name: Setup Git
+        id: setup-git
+        uses: gridsuite/ci-cd-test/.github/common/setup-git@main
+        with:
+          githubappId: ${{ inputs.githubappId }}
+          githubappPrivateKey: ${{ secrets.VERSIONBUMP_GHAPP_PRIVATE_KEY }}
+
+      - name: Parse release version
+        run: |
+          regex="^v([0-9]+)\.([0-9]+)$"
+          if [[ $RUNGHA_RELEASE_VERSION =~ $regex ]]
+          then
+            echo Release version matches vX.X format
+          else 
+            echo ERROR: release version should match the format vX.X
+            exit 1
+          fi
+        env:
+          RUNGHA_RELEASE_VERSION: ${{ inputs.releaseVersion }} # just for defense against script injection
+
+      - name: Check if release already exists
+        run: |
+          if git ls-remote --quiet --exit-code origin "refs/heads/release-$RUNGHA_RELEASE_VERSION" >/dev/null 2>&1
+          then
+            echo "Release $RUNGHA_RELEASE_VERSION already exists, patch will be perfomed"
+          else
+            echo "Release $RUNGHA_RELEASE_VERSION doesn't exist, patch cannot be performed"
+            exit 1
+          fi
+        env:
+          RUNGHA_RELEASE_VERSION: ${{ inputs.releaseVersion }} # just for defense against script injection
+
+      - name: Checkout on existing release branch
+        run: |
+          git checkout "release-$RUNGHA_RELEASE_VERSION"
+        env:
+          RUNGHA_RELEASE_VERSION: ${{ inputs.releaseVersion }} # just for defense against script injection
+
+      - name: Fetch tags explicitly
+        run: git fetch --tags --force
+
+      - name: Extract tag versions
+        run: |
+          lastTag=$(git describe --tags --abbrev=0)
+          regex="^v([0-9]+)\.([0-9]+)\.([0-9]+)$"
+          if [[ $lastTag =~ $regex ]]
+          then
+            major=${BASH_REMATCH[1]}
+            minor=${BASH_REMATCH[2]}
+            patch=${BASH_REMATCH[3]}
+            ((++patch))
+            echo "GITHUB_MAJOR_VERSION=$major" >> $GITHUB_ENV
+            echo "GITHUB_MINOR_VERSION=$minor" >> $GITHUB_ENV
+            echo "GITHUB_PATCH_VERSION=$patch" >> $GITHUB_ENV
+            echo "GITHUB_SHORT_VERSION=$major.$minor.$patch" >> $GITHUB_ENV
+          else
+            echo "ERROR: last tag $lastTag does not match required format vX.X.X"
+            exit 1
+          fi
+
+      - name: Create tag
+        run: |
+          git tag "v$GITHUB_SHORT_VERSION"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ inputs.dockerUsername }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and publish Docker image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          push: true
+          tags: ${{ inputs.dockerImage }}:${{ env.GITHUB_SHORT_VERSION }}
+
+      - name: Push release branch and tag
+        run: |
+          git push origin "v$GITHUB_SHORT_VERSION"
