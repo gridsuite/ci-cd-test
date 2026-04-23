@@ -1,6 +1,6 @@
 {
     "name": "demo-app",
-    "version": "0.17.0",
+    "version": "0.17.1",
     "license": "MPL-2.0",
     "private": true,
     "type": "module",
