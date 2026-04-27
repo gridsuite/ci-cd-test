@@ -1,6 +1,6 @@
 {
     "name": "demo-app",
-    "version": "1.0.0-SNAPSHOT",
+    "version": "0.18.0",
     "license": "MPL-2.0",
     "private": true,
     "type": "module",
@@ -8,13 +8,11 @@
         "node": ">=24",
         "npm": "^11.6.2"
     },
-    "dependencies": {
-    },
+    "dependencies": {},
     "scripts": {
         "build": "",
         "test:coverage": "",
         "licenses-check": ""
     },
-    "devDependencies": {
-    }
+    "devDependencies": {}
 }
