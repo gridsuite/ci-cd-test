@@ -1,0 +1,123 @@
+name: Dispatch prepare-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      repos_to_release:
+        description: "JSON array of repositories to release (.github/config/repos-to-release.json content if left empty)"
+        default: ""
+        required: false
+      target_date:
+        description: "Date of last commit to inlude (ISO 8601, ex: 2024-09-13T23:59:59Z - default : last friday 23:59:59)."
+        required: false
+      release-version:
+        description: Release version (vX.X)
+        required: true
+        type: string
+      pat-token:
+        description: PAT token (with workflow permissions)
+        required: true
+        type: string
+    secrets:
+      VERSIONBUMP_GHAPP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    environment: main
+
+    steps:
+      - name: Checkout aggregator repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Mask GH_TOKEN Token
+        run: |
+          echo "::add-mask::$PAT_TOKEN"
+          echo "GH_TOKEN=$PAT_TOKEN" >> $GITHUB_ENV
+        env:
+          PAT_TOKEN: ${{ github.event.inputs.pat-token}} # just for defense against script injection
+
+      - name: Validate pat-token input
+        run: |
+          scopes=$(gh api -i user 2>&1 | grep -i 'x-oauth-scopes:' | cut -d' ' -f2-)
+
+          if [[ -n "$scopes" && "$scopes" == *"workflow"* ]]; then
+              echo "✅ Token is valid and has the 'workflow' scope"
+          elif [[ -n "$scopes" ]]; then
+              echo "⚠️ Token is valid but missing the 'workflow' scope"
+              exit 1
+          else
+              echo "❌ Invalid token"
+              exit 1
+          fi
+
+      - name: Validate inputs
+        run: |
+          if [ -n "$TARGET_DATE" ]; then
+            if ! date -d "$TARGET_DATE" "+%Y-%m-%dT%H:%M:%SZ" >/dev/null 2>&1; then
+              echo "❌ Invalid date"
+              exit 1
+            fi
+            echo "✅ Valid date"
+          else
+            echo "ℹ️ No date provided, will fallback to last friday"
+          fi
+
+          if [[ "$RELEASE_VERSION" =~ ^v([0-9]+)\.([0-9]+)$ ]]; then
+            echo "✅ Valid version"
+          else
+            echo "❌ Invalid version, should match the format vX.X"
+            exit 1
+          fi
+
+          if [ -n "$REPOS_TO_RELEASE" ]; then
+            CONFIG_FILE=".github/config/repos-to-release.json"
+            # Parse input JSON array into Bash array
+            jq_output=$(jq -r '.[]' <<< "$REPOS_TO_RELEASE") || {
+              echo "❌ Invalid JSON in REPOS_TO_RELEASE"
+              exit 1
+            }
+
+            if [[ -z "$jq_output" ]]; then
+              echo "❌ REPOS_TO_RELEASE cannot be an empty array"
+              exit 1
+            fi
+
+            mapfile -t urls <<< "$jq_output"
+
+            # For each URL, check it exists in the config JSON array
+            for url in "${urls[@]}"; do
+              if ! jq -e --arg url "$url" 'index($url)' "$CONFIG_FILE" > /dev/null; then
+              echo "❌ URL '$url' is unauthorized"
+              exit 1
+              fi
+            done
+          fi
+
+          echo "✅ All URLs are valid"
+        env:
+          REPOS_TO_RELEASE: ${{ github.event.inputs.repos_to_release }} # just for defense against script injection
+          RELEASE_VERSION: ${{ github.event.inputs.release-version }} # just for defense against script injection
+          TARGET_DATE: ${{ github.event.inputs.target_date }} # just for defense against script injection
+
+      - name: Load repo list from file or input
+        id: load_repos
+        run: |
+          if [[ -z "$REPOS_TO_RELEASE" ]]; then
+            echo "ℹ️ No user input → load .github/config/repos-to-release.json"
+            # JSON array in file → one URL per line
+            list="$(jq -r '.[]' .github/config/repos-to-release.json)"
+          else
+            echo "ℹ️ Input found → load user input $REPOS_TO_RELEASE"
+            # JSON array from input → one URL per line
+            list="$(jq -r '.[]' <<< "$REPOS_TO_RELEASE")"
+          fi
+          echo "$list"
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$list" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          REPOS_TO_RELEASE: ${{ github.event.inputs.repos_to_release }} # just for defense against script injection
