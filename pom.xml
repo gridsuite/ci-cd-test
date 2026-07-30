@@ -42,6 +42,9 @@
     </developers>
 
     <properties>
+        <java.version>25</java.version>
+        <maven.jib.version>3.5.1</maven.jib.version>
+        <jib.from.image>powsybl/java:4.0.0</jib.from.image>
         <gridsuite-dependencies.version>43.0.0</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.ci-cd-test</liquibase-hibernate-package>
         <sonar.organization>gridsuite</sonar.organization>
@@ -92,6 +95,11 @@
                 <version>${gridsuite-dependencies.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.46</version>
             </dependency>
 
             <!-- project specific dependencies -->
