@@ -43,3 +43,27 @@ databaseChangeLog:
   - include:
       file: changesets/changelog_20250827T091725Z.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20250918T115951Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20251014T135234Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20251105T112730Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20251202T134859Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20260227T104835Z.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changesets/changelog_20260324T160000Z.xml
+      relativeToChangelogFile: true

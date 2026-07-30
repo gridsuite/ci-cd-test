@@ -1,0 +1,24 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="elcheikhbas (generated)" id="1758196805499-8">
+        <createTable tableName="filter_based_contingency_list">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="filter_based_contingency_listPK"/>
+            </column>
+            <column name="modification_date" type="timestamptz"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1758196805499-9">
+        <createTable tableName="filter_based_contingency_list_filter">
+            <column name="filter_based_contingency_list_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_ids" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1758196805499-14">
+        <addForeignKeyConstraint baseColumnNames="filter_based_contingency_list_id" baseTableName="filter_based_contingency_list_filter"
+                                 constraintName="filter_based_contingency_list_id_fk" deferrable="false" initiallyDeferred="false"
+                                 referencedColumnNames="id" referencedTableName="filter_based_contingency_list" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

@@ -6,25 +6,23 @@
  */
 package org.gridsuite.actions.server.entities;
 
-import com.powsybl.contingency.contingency.list.IdentifierContingencyList;
+import com.powsybl.contingency.list.IdentifierContingencyList;
 import com.powsybl.iidm.network.identifiers.IdBasedNetworkElementIdentifier;
 import com.powsybl.iidm.network.identifiers.NetworkElementIdentifier;
 import com.powsybl.iidm.network.identifiers.NetworkElementIdentifierContingencyList;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.actions.server.dto.IdBasedContingencyList;
+import org.gridsuite.actions.dto.contingency.IdBasedContingencyList;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-
-import jakarta.persistence.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * @author Etienne Homer <etienne.homer@rte-france.com>
+ * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @NoArgsConstructor
 @Getter
@@ -53,7 +51,8 @@ public class IdBasedContingencyListEntity extends AbstractContingencyEntity {
             if (contingencyName.isEmpty() || identifierList == null || identifierList.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one contingency is partially defined for the contingency list " + identifierContingencyList.getName());
             }
-            identifiersListEntities.add(new IdentifierListEntity(UUID.randomUUID(), contingencyName, identifierList.stream().map(identifier -> ((IdBasedNetworkElementIdentifier) identifier).getIdentifier()).collect(Collectors.toSet())));
+            identifiersListEntities.add(new IdentifierListEntity(UUID.randomUUID(), contingencyName, identifierList.stream().map(identifier -> ((IdBasedNetworkElementIdentifier)
+                    identifier).getIdentifier()).collect(Collectors.toSet())));
             }
         );
     }

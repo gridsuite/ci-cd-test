@@ -6,16 +6,15 @@
  */
 package org.gridsuite.actions.server.entities;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.*;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * @author Etienne Homer <etienne.homer@rte-france.com>
+ * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Getter
 @NoArgsConstructor
@@ -32,6 +31,7 @@ public class IdentifierListEntity {
 
     @Column(name = "equipmentIds")
     @ElementCollection
-    @CollectionTable(foreignKey = @ForeignKey(name = "identifierListEntity_equipmentIds_fk1"), indexes = {@Index(name = "identifierListEntity_equipmentIds_idx1", columnList = "identifier_list_entity_id")})
+    @CollectionTable(foreignKey = @ForeignKey(name = "identifierListEntity_equipmentIds_fk1"), indexes = {@Index(name = "identifierListEntity_equipmentIds_idx1", columnList =
+            "identifier_list_entity_id")})
     Set<String> equipmentIds;
 }

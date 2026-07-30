@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="millotflo (generated)" id="1762342070714-1">
+        <dropTable tableName="equipment_types_by_filter_id_equipment_types"/>
+    </changeSet>
+    <changeSet author="millotflo (generated)" id="1762342070714-2">
+        <dropTable tableName="equipment_types_by_filter_id"/>
+    </changeSet>
+    <changeSet author="millotflo (generated)" id="1762342070714-8">
+        <createTable tableName="equipment_types_by_filter">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="equipment_types_by_filterPK"/>
+            </column>
+            <column name="filter_id" type="UUID"/>
+            <column name="filter_based_contingency_list_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="millotflo (generated)" id="1762342070714-9">
+        <createTable tableName="equipment_types_by_filter_equipment_types">
+            <column name="equipment_types_by_filter_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="equipment_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="millotflo (generated)" id="1762342070714-14">
+        <addForeignKeyConstraint baseColumnNames="equipment_types_by_filter_id" baseTableName="equipment_types_by_filter_equipment_types" constraintName="equipment_types_by_filter_equipment_types_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="equipment_types_by_filter" validate="true"/>
+    </changeSet>
+    <changeSet author="millotflo (generated)" id="1762342070714-15">
+        <addForeignKeyConstraint baseColumnNames="filter_based_contingency_list_id" baseTableName="equipment_types_by_filter" constraintName="filter_based_contingency_list_selected_equipment_types_by_filter_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="filter_based_contingency_list" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

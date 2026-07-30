@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ci-cd-test
+    name: actions-server
   cloud:
     stream:
       bindings:
@@ -12,7 +12,7 @@ spring:
 
 powsybl-ws:
   database:
-    name: ci-cd-test
+    name: actions
 
 server:
   max-http-header-size: 64000

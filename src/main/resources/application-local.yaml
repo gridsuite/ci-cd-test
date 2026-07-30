@@ -13,3 +13,8 @@ spring:
 powsybl-ws:
   database:
     host: localhost
+
+gridsuite:
+  services:
+    filter-server:
+      base-uri: http://localhost:5027
