@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -11,15 +11,24 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.actions.server.dto.*;
+import jakarta.persistence.EntityNotFoundException;
+import org.gridsuite.actions.dto.*;
+import org.gridsuite.actions.dto.contingency.AbstractContingencyList;
+import org.gridsuite.actions.dto.contingency.FilterBasedContingencyList;
+import org.gridsuite.actions.dto.contingency.IdBasedContingencyList;
+import org.gridsuite.actions.dto.contingency.PersistentContingencyList;
+import org.gridsuite.actions.dto.evaluation.ContingencyIdsByGroup;
+import org.gridsuite.actions.dto.evaluation.ContingencyInfos;
+import org.gridsuite.actions.dto.evaluation.ContingencyListExportResult;
+import org.gridsuite.actions.server.dto.ContingencyCount;
+import org.gridsuite.actions.server.dto.CountWithMissingUuids;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -38,37 +47,21 @@ public class ContingencyListController {
         this.service = service;
     }
 
-    @GetMapping(value = "/form-contingency-lists", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get all form contingency lists")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All form contingency lists")})
-    public ResponseEntity<List<PersistentContingencyList>> getFormContingencyLists() {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(service.getFormContingencyLists());
-    }
-
-    @GetMapping(value = "/contingency-lists", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get all contingency lists metadata")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All contingency lists metadata")})
-    public ResponseEntity<List<ContingencyListMetadata>> getContingencyListsMetadata() {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(service.getContingencyListsMetadata());
-    }
-
-    @GetMapping(value = "/form-contingency-lists/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get form contingency list by id")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The form contingency list"),
-        @ApiResponse(responseCode = "404", description = "The form contingency list does not exists")})
-    public ResponseEntity<PersistentContingencyList> getFormContingencyList(@PathVariable("id") UUID id) {
-        return service.getFormContingencyList(id).map(contingencyList -> ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(contingencyList))
-            .orElse(ResponseEntity.notFound().build());
+    @PostMapping(value = "/contingency-lists/count-by-group", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Evaluate all contingency lists in each group and return the count by group with information about missing contingencies lists")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The total contingency count by group and list of missing contingencies lists UUIDs")})
+    public ResponseEntity<Map<String, CountWithMissingUuids>> getContingencyCountByGroup(@RequestParam(value = "networkUuid", required = false) UUID networkUuid,
+                                                                                         @RequestParam(value = "variantId", required = false) String variantId,
+                                                                                         @RequestBody ContingencyIdsByGroup contingencyIdsByGroup) {
+        return ResponseEntity.ok().body(service.getContingencyCountByGroup(contingencyIdsByGroup, networkUuid, variantId));
     }
 
     @GetMapping(value = "/contingency-lists/count", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Evaluate all contingency lists passed and return the global count")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The total contingency count")})
-    public ResponseEntity<Integer> getContingencyCount(@Parameter(description = "Contingency list ids") @RequestParam(name = "ids") List<UUID> ids,
-                                                       @RequestParam(value = "networkUuid", required = false) UUID networkUuid,
-                                                       @RequestParam(value = "variantId", required = false) String variantId) {
+    public ResponseEntity<ContingencyCount> getContingencyCount(@Parameter(description = "Contingency list ids") @RequestParam(name = "ids") List<UUID> ids,
+                                                                @RequestParam(value = "networkUuid", required = false) UUID networkUuid,
+                                                                @RequestParam(value = "variantId", required = false) String variantId) {
         return ResponseEntity.ok().body(service.getContingencyCount(ids, networkUuid, variantId));
     }
 
@@ -92,16 +85,6 @@ public class ContingencyListController {
         return ResponseEntity.ok().body(service.exportContingencyInfosList(ids, networkUuid, variantId));
     }
 
-    @PostMapping(value = "/form-contingency-lists", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Create a form contingency list")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The form contingency list have been created successfully")})
-    public ResponseEntity<PersistentContingencyList> createFormContingencyList(@RequestParam(required = false, value = "id") UUID id,
-                                                                               @RequestBody FormContingencyList formContingencyList) {
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(service.createFormContingencyList(id, formContingencyList));
-    }
-
     @PostMapping(value = "/identifier-contingency-lists", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create an identifier contingency list")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The identifier contingency list have been created successfully")})
@@ -123,11 +106,11 @@ public class ContingencyListController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping(value = "/identifier-contingency-lists")
+    @PostMapping(value = "/identifier-contingency-lists/{id}/duplicate")
     @Operation(summary = "Create a identifier contingency list from another existing one")
-        @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The identifier contingency list have been duplicated successfully"),
-                               @ApiResponse(responseCode = "404", description = "Source script contingency list not found")})
-    public ResponseEntity<UUID> duplicateIdentifierContingencyList(@RequestParam("duplicateFrom") UUID identifierContingencyListsId) {
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The identifier contingency list have been duplicated successfully"),
+        @ApiResponse(responseCode = "404", description = "Source script contingency list not found")})
+    public ResponseEntity<UUID> duplicateIdentifierContingencyList(@PathVariable("id") UUID identifierContingencyListsId) {
         return service.duplicateIdentifierContingencyList(identifierContingencyListsId).map(contingencyList -> ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(contingencyList))
@@ -149,30 +132,51 @@ public class ContingencyListController {
         }
     }
 
-    @PostMapping(value = "/form-contingency-lists", params = "duplicateFrom")
-    @Operation(summary = "Create a form contingency list from another existing one")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The form contingency list have been duplicated successfully"),
-                           @ApiResponse(responseCode = "404", description = "Source form contingency list not found")})
-    public ResponseEntity<UUID> duplicateFormContingencyList(@RequestParam("duplicateFrom") UUID formContingencyListsId) {
-        return service.duplicateFormContingencyList(formContingencyListsId).map(contingencyList -> ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(contingencyList))
-                .orElse(ResponseEntity.notFound().build());
+    @PostMapping(value = "/filters-contingency-lists", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create an filter base contingency list")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The filter based contingency list has been created successfully")})
+    public ResponseEntity<PersistentContingencyList> createFilterBasedContingencyList(@RequestParam(required = false, value = "id") UUID id,
+                                                                                     @RequestBody FilterBasedContingencyList filterBasedContingencyList) {
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(service.createFilterBasedContingencyList(id, filterBasedContingencyList));
     }
 
-    @PutMapping(value = "/form-contingency-lists/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Modify a form contingency list")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The form contingency list have been modified successfully")})
-    public ResponseEntity<Void> modifyFormContingencyList(
-            @PathVariable UUID id,
-            @RequestBody FormContingencyList formContingencyList,
-            @RequestHeader("userId") String userId) {
+    @PutMapping(value = "/filters-contingency-lists/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Modify a filter based contingency list")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The filter based contingency list have been modified successfully")})
+    public ResponseEntity<Void> modifyFilterBasedContingencyList(
+        @PathVariable UUID id,
+        @RequestBody FilterBasedContingencyList contingencyList,
+        @RequestHeader("userId") String userId) {
         try {
-            service.modifyFormContingencyList(id, formContingencyList, userId);
+            service.modifyFilterBasedContingencyList(id, contingencyList, userId);
             return ResponseEntity.ok().build();
         } catch (EntityNotFoundException ignored) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping(value = "/filters-contingency-lists/{id}/duplicate")
+    @Operation(summary = "Create a filter based contingency list from existing one")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The filter based contingency list have been duplicated successfully"),
+        @ApiResponse(responseCode = "404", description = "Source filter based contingency list not found")})
+    public ResponseEntity<UUID> duplicateFilterBasedContingencyList(@PathVariable("id") UUID contingencyListsId) {
+        return service.duplicateFilterBasedContingencyList(contingencyListsId).map(contingencyList -> ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(contingencyList))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping(value = "/filters-contingency-lists/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get filter based contingency list by id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The filter based contingency list"),
+        @ApiResponse(responseCode = "404", description = "The filter based contingency list does not exists")})
+    public ResponseEntity<FilterBasedContingencyList> getFilterBasedContingencyList(@PathVariable("id") UUID id) {
+        return service.getFilterBasedContingencyList(id).map(contingencyList -> ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(contingencyList))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping(value = "/contingency-lists/{id}")
@@ -193,5 +197,12 @@ public class ContingencyListController {
         @ApiResponse(responseCode = "404", description = "The contingency list does not exists")})
     public ResponseEntity<List<ContingencyListMetadata>> getContingencyListsMetadata(@RequestParam("ids") List<UUID> ids) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(service.getContingencyListsMetadata(ids));
+    }
+
+    @PostMapping(value = "/contingency-lists", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get persistent contingency lists by UUIDs")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The list of persistent contingency lists")})
+    public ResponseEntity<List<AbstractContingencyList>> getPersistentContingencyLists(@RequestBody List<UUID> ids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(service.getPersistentContingencyLists(ids));
     }
 }

@@ -11,9 +11,6 @@ package org.gridsuite.actions.server;
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 
-import java.time.Instant;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +18,8 @@ import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class NotificationService {

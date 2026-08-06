@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    Copyright (c) 2020, RTE (http://www.rte-france.com)
-    This Source Code Form is subject to the terms of the Mozilla Public
-    License, v. 2.0. If a copy of the MPL was not distributed with this
-    file, You can obtain one at http://mozilla.org/MPL/2.0/.
--->
+<!--~
+  ~ Copyright (c) 2026, RTE (http://www.rte-france.com)
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>22</version>
+        <version>28</version>
         <relativePath/>
     </parent>
 
@@ -42,7 +42,12 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>43.0.0</gridsuite-dependencies.version>
+        <!-- FIXME to remove when powsybl-parent supports JDK25 -->
+        <java.version>25</java.version>
+        <maven.jacoco.version>0.8.13</maven.jacoco.version>
+        <maven.jib.version>3.5.1</maven.jib.version>
+        <jib.from.image>powsybl/java:4.0.0</jib.from.image>
+        <gridsuite-dependencies.version>51.1.0</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.ci-cd-test</liquibase-hibernate-package>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:ci-cd-test</sonar.projectKey>
@@ -107,6 +112,10 @@
         </dependency>
 
         <!-- Compilation dependencies -->
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-actions</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -212,6 +221,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

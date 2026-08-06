@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="deharbemat (generated)" id="1764683346127-3">
+        <dropForeignKeyConstraint baseTableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES1" constraintName="formContingencyListEntity_countries1_fk"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-4">
+        <dropForeignKeyConstraint baseTableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES2" constraintName="formContingencyListEntity_countries2_fk"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-5">
+        <dropForeignKeyConstraint baseTableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES" constraintName="formContingencyListEntity_countries_fk"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-6">
+        <dropForeignKeyConstraint baseTableName="FORM_CONTINGENCY_LIST" constraintName="numericFilterId_id_fk"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-7">
+        <dropForeignKeyConstraint baseTableName="FORM_CONTINGENCY_LIST" constraintName="numericFilterId_id_fk1"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-8">
+        <dropForeignKeyConstraint baseTableName="FORM_CONTINGENCY_LIST" constraintName="numericFilterId_id_fk2"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-9">
+        <dropTable tableName="FORM_CONTINGENCY_LIST"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-10">
+        <dropTable tableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-11">
+        <dropTable tableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES1"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1764683346127-12">
+        <dropTable tableName="FORM_CONTINGENCY_LIST_ENTITY_COUNTRIES2"/>
+    </changeSet>
+</databaseChangeLog>
